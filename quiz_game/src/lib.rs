@@ -14,6 +14,12 @@ pub struct QAPair {
     pub answer: String,
 }
 
+/// Simple message enum for the quiz and timer to use.
+pub enum Msg {
+    Increment,
+    Exit,
+}
+
 impl Quiz {
     /// Creates a new Quiz from a csv file. The file must have headers
     /// 'question' and 'answer', and only these headers.
