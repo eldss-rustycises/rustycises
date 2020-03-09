@@ -1,4 +1,6 @@
 use csv;
+use rand;
+use rand::seq::SliceRandom;
 use serde::Deserialize;
 use std::error::Error;
 
@@ -46,6 +48,11 @@ impl Quiz {
     /// Returns a reference to the question list.
     pub fn question_list(&self) -> &Vec<QAPair> {
         &self.question_list
+    }
+
+    pub fn shuffle(&mut self) {
+        let mut rng = rand::thread_rng();
+        self.question_list[..].shuffle(&mut rng);
     }
 }
 

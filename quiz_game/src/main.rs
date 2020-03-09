@@ -26,6 +26,13 @@ fn main() {
                 ),
         )
         .arg(
+            Arg::with_name("random")
+                .short("r")
+                .long("random")
+                .takes_value(false)
+                .help("Randomly shuffle questions."),
+        )
+        .arg(
             Arg::with_name("secs")
                 .short("s")
                 .long("secs")
@@ -48,11 +55,17 @@ fn main() {
 
     // CSV file path string
     let path_str = matches.value_of("csv_file").unwrap_or("./problems.csv");
+    // Shuffle or not
+    let shuffle = if matches.is_present("random") {
+        true
+    } else {
+        false
+    };
 
     // Timer number
     let time: u64 = if matches.is_present("timer") {
-        // Get string val
         matches
+            // Get string val
             .value_of("timer")
             .unwrap_or_else(|| {
                 println!("Problem getting timer value.");
@@ -83,7 +96,7 @@ fn main() {
     };
 
     // Make quiz
-    let quiz = Quiz::from_csv(path_str).unwrap_or_else(|e| {
+    let mut quiz = Quiz::from_csv(path_str).unwrap_or_else(|e| {
         println!("Problem opening csv {}: {}", path_str, e);
         process::exit(1);
     });
@@ -106,6 +119,9 @@ fn main() {
 
     // Start quiz in new thread
     thread::spawn(move || {
+        if shuffle {
+            quiz.shuffle();
+        }
         for (index, QAPair { question, answer }) in quiz.question_list().iter().enumerate() {
             // Ask question
             println!("Question #{}: {}", index + 1, question);
