@@ -2,12 +2,9 @@ use csv;
 use serde::Deserialize;
 use std::error::Error;
 
-/// Quiz contains information about a single quiz, including
-/// questions/answers and user performance statistics.
+/// Quiz contains a list of questions and answers for a quiz.
 pub struct Quiz {
-    pub question_list: Vec<QAPair>,
-    pub num_questions: u32,
-    pub num_correct: u32,
+    question_list: Vec<QAPair>,
 }
 
 /// QAPair stores a single record of a question/answer csv
@@ -27,21 +24,22 @@ impl Quiz {
         let mut questions = Vec::new();
         let mut rdr = csv::Reader::from_path(path)?;
 
-        let mut count = 0;
         for result in rdr.deserialize() {
             // transforms a record into a QAPair
             let record: QAPair = result?;
             questions.push(record);
-            count += 1
         }
 
         let quiz = Quiz {
             question_list: questions,
-            num_questions: count,
-            num_correct: 0,
         };
 
         Ok(quiz)
+    }
+
+    /// Returns a reference to the question list.
+    pub fn question_list(&self) -> &Vec<QAPair> {
+        &self.question_list
     }
 }
 
@@ -83,8 +81,7 @@ question,answer
         ];
 
         assert_eq!(qa_vec, quiz.question_list);
-        assert_eq!(2, quiz.num_questions);
-        assert_eq!(0, quiz.num_correct);
+        assert_eq!(2, quiz.question_list.len());
 
         // Remove test file
         fs::remove_file(filename).expect("Problem removing tempfile");
