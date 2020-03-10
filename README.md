@@ -1,2 +1,2 @@
 # rustycises
-Exercises from Gophercises - https://courses.calhoun.io/courses/cor_gophercises - but using Rust.
+Exercises from Gophercises - https://courses.calhoun.io/ - but using Rust.
