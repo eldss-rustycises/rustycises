@@ -1,6 +1,6 @@
-use assert_cmd::prelude::*; // Add methods on commands
-use predicates::prelude::*;
-use std::process::Command; // Run programs // Used for writing assertions
+use assert_cmd::prelude::*; // Run programs
+use predicates::prelude::*; // Used for writing assertions
+use std::process::Command;
 
 #[test]
 fn file_doesnt_exist() {
