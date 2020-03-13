@@ -16,7 +16,10 @@ use quiz_game::{Msg, QAPair, Quiz};
     about = "Runs a quiz, parsed from a csv, on the command line."
 )]
 struct Opts {
-    /// A CSV file path with question,answer fields. These must be headers as well.
+    /// A CSV file path with question,answer fields.
+    ///
+    /// The file must have the headers question,answer
+    /// in order for the program to parse it correctly.
     #[structopt(parse(from_os_str), short = "c", long = "csv")]
     csv_path: PathBuf,
 
@@ -46,7 +49,7 @@ fn main() {
         process::exit(1);
     });
 
-    // Make quiz
+    // Make quiz (mutable in case we need to shuffle)
     let mut quiz = Quiz::from_reader(file).unwrap_or_else(|e| {
         println!("Problem parsing csv: {}", e);
         process::exit(1);
@@ -56,7 +59,7 @@ fn main() {
     println!("Press Enter when ready");
     let _ = io::stdin().read_line(&mut String::new());
 
-    // Data needed for program
+    // Set up data/communication needed for program
     let mut correct = 0;
     let length = quiz.question_list().len();
     let (tx, rx) = mpsc::channel();
