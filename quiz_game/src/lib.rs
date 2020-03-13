@@ -3,6 +3,7 @@ use rand;
 use rand::seq::SliceRandom;
 use serde::Deserialize;
 use std::error::Error;
+use std::io;
 
 /// Quiz contains a list of questions and answers for a quiz.
 pub struct Quiz {
@@ -28,9 +29,9 @@ impl Quiz {
     ///
     /// # Errors
     /// Function may fail while reading the csv or while deserializing data.
-    pub fn from_csv(path: &str) -> Result<Quiz, Box<dyn Error>> {
+    pub fn from_reader(reader: impl io::Read) -> Result<Quiz, Box<dyn Error>> {
         let mut questions = Vec::new();
-        let mut rdr = csv::Reader::from_path(path)?;
+        let mut rdr = csv::Reader::from_reader(reader);
 
         for result in rdr.deserialize() {
             // transforms a record into a QAPair
@@ -59,28 +60,15 @@ impl Quiz {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::{self, File};
-    use std::io::Write;
 
     #[test]
-    fn quiz_from_csv_success() {
-        let filename = "quiz-from-csv-success.csv";
-        // Setup test file
-        // Need new scope for file processing so it will close
-        {
-            let mut file = File::create(filename).expect("Problem creating test file.");
-            let csv_text = b"\
+    fn quiz_from_reader_success() {
+        let csv_text = "\
 question,answer
 1+1,2
 2+2,4
 ";
-            file.write_all(csv_text)
-                .expect("Problem writing to test file");
-        } // file closed here
-
-        // ===== Test begins here =====
-
-        let quiz = Quiz::from_csv(filename).expect("Problem creating Quiz");
+        let quiz = Quiz::from_reader(csv_text.as_bytes()).expect("Problem creating Quiz");
 
         let qa_vec = vec![
             QAPair {
@@ -95,8 +83,5 @@ question,answer
 
         assert_eq!(qa_vec, quiz.question_list);
         assert_eq!(2, quiz.question_list.len());
-
-        // Remove test file
-        fs::remove_file(filename).expect("Problem removing tempfile");
     }
 }

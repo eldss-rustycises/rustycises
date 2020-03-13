@@ -1,103 +1,54 @@
-use clap::{App, Arg, ArgGroup};
+use std::fs::File;
 use std::io;
+use std::path::PathBuf;
 use std::process;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
+use structopt::StructOpt;
 
 use quiz_game::{Msg, QAPair, Quiz};
 
-const DEFAULT_SECS: u64 = 30;
+// Holds command line arguments
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "Quiz Runner",
+    about = "Runs a quiz, parsed from a csv, on the command line."
+)]
+struct Opts {
+    /// A CSV file path with question,answer fields. These must be headers as well.
+    #[structopt(parse(from_os_str), short = "c", long = "csv")]
+    csv_path: PathBuf,
+
+    /// Randomly shuffle questions
+    #[structopt(short, long)]
+    random: bool,
+
+    /// Set a time limit in seconds.
+    #[structopt(short, long, default_value = "30")]
+    secs: u64,
+
+    /// Set a time limit in minutes.
+    #[structopt(short, long, default_value = "0")]
+    mins: u64,
+}
 
 fn main() {
-    // Define command line args
-    let matches = App::new("Quiz Runner")
-        .version("0.1.0")
-        .author("Evan <evanldouglass@gmail.com")
-        .about("Runs a quiz, parsed from a csv, on the command line.")
-        .arg(
-            Arg::with_name("csv_file")
-                .short("c")
-                .long("csv")
-                .takes_value(true)
-                .help(
-                    "A csv file with lines in the form question,answer. \
-                    Must have the header question,answer.",
-                ),
-        )
-        .arg(
-            Arg::with_name("random")
-                .short("r")
-                .long("random")
-                .takes_value(false)
-                .help("Randomly shuffle questions."),
-        )
-        .arg(
-            Arg::with_name("secs")
-                .short("s")
-                .long("secs")
-                .takes_value(true)
-                .help("The length of the quiz, in seconds."),
-        )
-        .arg(
-            Arg::with_name("mins")
-                .short("m")
-                .long("mins")
-                .takes_value(true)
-                .help("The length of the quiz, in minutes."),
-        )
-        .group(
-            ArgGroup::with_name("timer")
-                .args(&["secs", "mins"])
-                .required(false),
-        )
-        .get_matches();
-
-    // CSV file path string
-    let path_str = matches.value_of("csv_file").unwrap_or("./problems.csv");
-    // Shuffle or not
-    let shuffle = if matches.is_present("random") {
-        true
-    } else {
-        false
-    };
-
-    // Timer number
-    let time: u64 = if matches.is_present("timer") {
-        matches
-            // Get string val
-            .value_of("timer")
-            .unwrap_or_else(|| {
-                println!("Problem getting timer value.");
-                process::exit(1);
-            })
-            // Parse to u32
-            .parse()
-            .unwrap_or_else(|e| {
-                println!("Problem parsing time: {}", e);
-                process::exit(1);
-            })
-    } else {
-        DEFAULT_SECS
-    };
-
-    // Timer units
-    let is_secs = if matches.is_present("mins") {
-        false
-    } else {
-        true
-    };
+    // Flags
+    let opts = Opts::from_args();
 
     // Make the timer
-    let duration = if is_secs {
-        Duration::from_secs(time)
-    } else {
-        Duration::from_secs(time * 60)
-    };
+    let duration = Duration::from_secs(opts.secs + (opts.mins * 60));
+
+    // Open file
+    let file = File::open(&opts.csv_path).unwrap_or_else(|e| {
+        println!("Problem opening csv: {}", e);
+        process::exit(1);
+    });
 
     // Make quiz
-    let mut quiz = Quiz::from_csv(path_str).unwrap_or_else(|e| {
-        println!("Problem opening csv {}: {}", path_str, e);
+    let mut quiz = Quiz::from_reader(file).unwrap_or_else(|e| {
+        println!("Problem parsing csv: {}", e);
         process::exit(1);
     });
 
@@ -118,6 +69,7 @@ fn main() {
     });
 
     // Start quiz in new thread
+    let shuffle = opts.random;
     thread::spawn(move || {
         if shuffle {
             quiz.shuffle();
