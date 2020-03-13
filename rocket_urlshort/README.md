@@ -1,0 +1,3 @@
+In the Gophercises course, this exercise works with the Go standard library to create an HTTP handler function that returns a closure to handle url redirects. Rust does not have a the same kind of http standard library functionality as Go does, so I have had to use an external crate to adhere to. I've opted for Rocket because it is the web framework that I want to learn most.
+
+I'm not sure the problem can be completed in the same way yet, but I will be making a simple rocket server regardless.
