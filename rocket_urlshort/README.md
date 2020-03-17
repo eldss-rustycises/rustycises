@@ -4,4 +4,6 @@ While Rocket does have the Handler trait, I've found it difficult to figure out 
 
 ---
 
-Working with Rocket has been more difficult than I expected for this task. I tried using a simple HashMap for storage, but kept getting compile errors about lifetimes on a function that used Rocket's State, but the docs do not look like what the compiler wanted. I also tried using Diesel to integrate a database, but that got very confusing as well. I will have to go through some tutorials on working with Rocket and Diesel before coming back to this.
+Working with Rocket has been more difficult than I expected for this task. I tried using a simple HashMap for storage, but kept getting compile errors about lifetimes on a function that used Rocket's State, but the docs do not look like what the compiler wanted. I also tried using Diesel to integrate a database, but that got very confusing as well.
+
+Thankfully I have found a book that helps with structuring web apps using Diesel and Rocket (and Seed for UI via WebAssembly, but that is not used here). The book can be found [here](https://erwabook.com/). This exercise follows the structure presented there.
