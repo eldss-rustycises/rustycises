@@ -9,7 +9,7 @@ pub struct NewUrl<'a> {
 }
 
 /// Full representation of a row in the urls table.
-#[derive(Queryable, Identifiable)]
+#[derive(Queryable, Identifiable, Debug, PartialEq)]
 pub struct Url {
     pub id: i32,
     pub short: String,

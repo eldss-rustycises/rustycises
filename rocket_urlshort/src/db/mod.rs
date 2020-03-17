@@ -55,3 +55,67 @@ pub fn create_url_mapping<'a>(
 pub fn get_all_urls(conn: &SqliteConnection) -> QueryResult<Vec<models::Url>> {
     schema::urls::table.load(conn)
 }
+
+/// Removes the url mapping given by the key `short_url`.
+pub fn delete_url_mapping(conn: &SqliteConnection, short_url: &str) -> QueryResult<usize> {
+    use schema::urls::dsl::{short, urls};
+    diesel::delete(urls)
+        .filter(short.eq(short_url))
+        .execute(conn)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::error::Error;
+
+    // Running multiple tests in this fashion seems to fail due to concurrent
+    // testing. I had a second test that also used the `create_url_mapping` function
+    // and every time I ran `cargo test` one or the other would fail each time, and
+    // it would be a different one to fail each time. For now I have added all the
+    // functions into a single, happy-path test. This is not ideal, but I'm not yet
+    // sure how to manage with the issue. There does not seem to be any other obvious
+    // way to fix it within Diesel.
+    #[test]
+    fn add_and_retrieve_a_url() {
+        let conn = establish_connection();
+        conn.test_transaction::<_, Box<dyn Error>, _>(|| {
+            // Add a url
+            let one = create_url_mapping(
+                &conn,
+                "test",
+                "https://doc.rust-lang.org/book/ch11-01-writing-tests.html",
+            )?;
+            // Number of rows inserted
+            assert_eq!(1, one);
+
+            // This line returns a reference to a Vector of Url objects
+            let result = get_all_urls(&conn)?;
+            assert_eq!(1, result.len());
+
+            // Test the data returned
+            let result = &result[0];
+            let (res_short, res_long) = (&result.short, &result.long);
+            // Tests
+            assert_eq!(String::from("test"), res_short.to_string());
+            assert_eq!(
+                String::from("https://doc.rust-lang.org/book/ch11-01-writing-tests.html"),
+                res_long.to_string(),
+            );
+
+            // Remove the data
+            let rows_affected = delete_url_mapping(&conn, "test")?;
+            assert_eq!(1, rows_affected);
+
+            // Test no data returned
+            let result = get_all_urls(&conn)?;
+            assert_eq!(0, result.len());
+
+            // Remove again
+            let rows_affected = delete_url_mapping(&conn, "test")?;
+            assert_eq!(0, rows_affected);
+
+            Ok(())
+        });
+    }
+}
