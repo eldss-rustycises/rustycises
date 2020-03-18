@@ -1,7 +1,7 @@
 use super::schema::urls;
 
 /// Url represents a mapping from a shortened url to the actual url.
-#[derive(Insertable)]
+#[derive(Insertable, Serialize, Deserialize)]
 #[table_name = "urls"]
 pub struct NewUrl<'a> {
     pub short: &'a str,
@@ -9,7 +9,7 @@ pub struct NewUrl<'a> {
 }
 
 /// Full representation of a row in the urls table.
-#[derive(Queryable, Identifiable, Debug, PartialEq)]
+#[derive(Queryable, Identifiable, Debug, PartialEq, Serialize)]
 pub struct Url {
     pub id: i32,
     pub short: String,
