@@ -56,6 +56,13 @@ pub fn get_all_urls(conn: &SqliteConnection) -> QueryResult<Vec<models::Url>> {
     schema::urls::table.load(conn)
 }
 
+/// Gets the long url from a short url.
+pub fn get_url(conn: &SqliteConnection, short_url: &str) -> QueryResult<Vec<String>> {
+    use schema::urls::dsl::{long, short, urls};
+    let result = urls.select(long).filter(short.eq(short_url)).load(conn)?;
+    Ok(result)
+}
+
 /// Removes the url mapping given by the key `short_url`.
 pub fn delete_url_mapping(conn: &SqliteConnection, short_url: &str) -> QueryResult<usize> {
     use schema::urls::dsl::{short, urls};

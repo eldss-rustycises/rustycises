@@ -9,6 +9,7 @@ fn help() {
     println!("    new <short> <url>: add a new short url mapping");
     println!("    list: list all url mappings");
     println!("    remove <short>: removes the url mapping with key <short>");
+    println!("    get <short>: displays the full url represented by <short>");
 }
 
 fn main() {
@@ -26,6 +27,7 @@ fn main() {
         "new" => new_url(&args[2..]),
         "list" => list_all_urls(&args[2..]),
         "remove" => remove_url(&args[2..]),
+        "get" => get_url(&args[2..]),
         _ => help(),
     }
 }
@@ -76,5 +78,25 @@ fn remove_url(args: &[String]) {
     match db::delete_url_mapping(&conn, &args[0]) {
         Ok(rows) => println!("Removed {} rows", rows),
         Err(e) => eprintln!("Problem removing url: {}", e),
+    }
+}
+
+fn get_url(args: &[String]) {
+    if args.len() < 1 {
+        println!("get: missing <short>");
+        help();
+        return;
+    }
+
+    let conn = db::establish_connection();
+    let list = match db::get_url(&conn, &args[0]) {
+        Ok(urls) => urls,
+        Err(e) => {
+            eprintln!("Problem getting urls: {}", e);
+            return;
+        }
+    };
+    for url in list {
+        println!("{}", url);
     }
 }
